@@ -1,6 +1,56 @@
-import { Catch, ExceptionFilter, HttpException } from '@nestjs/common';
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import {
+  Catch,
+  Controller,
+  ExceptionFilter,
+  Get,
+  HttpException,
+  Inject,
+  Module,
+  Scope,
+} from '@nestjs/common';
+import { NestFactory, REQUEST } from '@nestjs/core';
+
+// SAME AS THE ALL THE OTHER FILES. JUST IN ONE SINGLE FILE.
+
+@Controller('app')
+export class AppController {
+  constructor(
+    @Inject('CONNECTION')
+    private readonly connection
+  ) {}
+
+  @Get()
+  get(): boolean {
+    console.log(this.connection);
+
+    return true;
+  }
+}
+
+@Module({
+  imports: [],
+  providers: [
+    {
+      provide: 'CONNECTION',
+      scope: Scope.REQUEST,
+      inject: [REQUEST],
+      useFactory: async (request: Request) => {
+        console.log('connectionFactory - useFactory - 1');
+        throw new CustomException();
+      },
+    }
+  ],
+  exports: ['CONNECTION'],
+})
+export class ConnectionModule {}
+
+@Module({
+  imports: [
+    ConnectionModule,
+  ],
+  controllers: [AppController],
+})
+export class AppModule {}
 
 export class CustomException extends Error {
   constructor() {
